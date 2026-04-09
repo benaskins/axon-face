@@ -12,7 +12,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	loop "github.com/benaskins/axon-loop"
-	talk "github.com/benaskins/axon-loop" // Message is aliased from axon-talk
 	tool "github.com/benaskins/axon-tool"
 )
 
@@ -26,7 +25,7 @@ type Chat struct {
 
 	Input    textarea.Model
 	Viewport viewport.Model
-	Messages []talk.Message
+	Messages []loop.Message
 
 	Width  int
 	Height int
@@ -119,7 +118,7 @@ func (c *Chat) HandleStreamTick(msg StreamTickMsg) tea.Cmd {
 		if content != "" {
 			slog.Info("agent response", "length", len(content))
 			c.Entries = append(c.Entries, Entry{Role: RoleAgent, Content: content})
-			c.Messages = append(c.Messages, talk.Message{Role: talk.RoleAssistant, Content: content})
+			c.Messages = append(c.Messages, loop.Message{Role: loop.RoleAssistant, Content: content})
 		}
 		c.Streaming = ""
 		c.Waiting = false
@@ -157,7 +156,7 @@ func (c *Chat) HandleResize(msg tea.WindowSizeMsg) {
 func (c *Chat) SendUser(content string) {
 	slog.Info("user message", "length", len(content))
 	c.Entries = append(c.Entries, Entry{Role: RoleUser, Content: content})
-	c.Messages = append(c.Messages, talk.Message{Role: talk.RoleUser, Content: content})
+	c.Messages = append(c.Messages, loop.Message{Role: loop.RoleUser, Content: content})
 	c.Waiting = true
 	c.Streaming = ""
 	c.RefreshViewport()
@@ -171,8 +170,8 @@ func (c *Chat) AppendEntry(e Entry) {
 
 // StartStream launches an LLM conversation via loop.Stream and returns
 // a Bubble Tea command that feeds events back through StreamTickMsg.
-func (c *Chat) StartStream(client talk.LLMClient, req *talk.Request, tools map[string]tool.ToolDef) tea.Cmd {
-	messages := make([]talk.Message, len(c.Messages))
+func (c *Chat) StartStream(client loop.LLMClient, req *loop.Request, tools map[string]tool.ToolDef) tea.Cmd {
+	messages := make([]loop.Message, len(c.Messages))
 	copy(messages, c.Messages)
 	req.Messages = messages
 	req.Stream = true
